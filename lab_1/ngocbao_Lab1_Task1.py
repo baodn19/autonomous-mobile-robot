@@ -37,6 +37,7 @@ def straight(bot, distance, speed):
     print(f"Driving Straight: {distance}mm | Wheel Rotations: {rotation:.1f}")
     
     bot.run_motors_for_rotations(rotation, left_speed=speed, right_speed=speed)
+    bot.stop_motors()
 
 
 def rotateInPlace(bot, degree, direction, speed):
@@ -56,6 +57,7 @@ def rotateInPlace(bot, degree, direction, speed):
     # Direction -1 (Left): Left motor backward (+), Right motor forward (+)
     speed *= direction
     bot.run_motors_for_rotations(rotation, left_speed=speed, right_speed=-speed)
+    bot.stop_motors()
     
 def circle(bot, radius, direction, outer_speed):
     """
@@ -123,16 +125,16 @@ if __name__ == "__main__":
     try:
         my_robot = HamBot(lidar_enabled=False, camera_enabled=False)
         
-        rectangle(1000, 2000, 50)
+        rectangle(my_robot, 1000, 2000, 50)
         time.sleep(1)
         
-        circle(my_robot, 500, 1, 50)
+        circle(my_robot, 500, 1, 60)
         time.sleep(1)
         
-        circle(my_robot, 1000, -1, 50)
+        circle(my_robot, 1000, -1, 60)
         time.sleep(1)
         
-        rectangle(1500, 500, 50)
+        rectangle(my_robot, 1500, 500, 50)
         time.sleep(1)
         
         circle(my_robot, 750, 1, 50)
