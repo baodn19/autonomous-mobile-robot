@@ -1,9 +1,21 @@
+"""
+Author: Ngoc Bao Dinh
+UID: U27463715
+
+AI usage 
+Prompt 1:
+Goal: Program a Python script to fulfill the task 1 outline for physical robots in the pdf "Lab 4 Code Submission.pdf".
+For physical robots information, refer to "RobotHardware2026.pdf".
+For the functions that can be implement in the Python script, refer to "robot.py"
+For sensor functions, refer to the other python scripts
+"""
+
 import time
 import numpy as np
 from scipy.optimize import minimize
 from robot_systems.robot import HamBot
 
-# --- System Constants ---
+
 LANDMARK_POSITIONS = {
     'yellow': (-1.2, 1.2),
     'blue':    (1.2, 1.2),
@@ -23,11 +35,13 @@ CAMERA_WIDTH = 640
 CENTER_TOLERANCE_PX = 60
 ROTATION_SPEED_RPM = 15
 
+"""
+    Function: Converts (x, y) position to grid cell index based on 4x4 grid with 0.6 m cells centered at (0, 0)
+    Parameter:
+    - x, y: estimated position in meters
+    Returns: cell index from 1 to 16, where 1 is top-left and 16 is bottom-right
+"""
 def get_cell_index(x, y):
-    """
-    Maps continuous (x, y) coordinates in meters to grid cell index 1-16.
-    Grid is 4x4, cells are 0.6 m x 0.6 m, centered at origin (0,0).
-    """
     # Offset by 1.2 m (half the total 2.4 m width/height) and divide by cell size
     col = int(np.floor((x + 1.2) / 0.6))
     row = int(np.floor((1.2 - y) / 0.6))
@@ -36,11 +50,16 @@ def get_cell_index(x, y):
     col = max(0, min(3, col))
     row = max(0, min(3, row))
     
-    # Calculate 1D index (1 to 16)
     return row * 4 + col + 1
 
+"""
+    Function: Computes the error between predicted and measured distances to landmarks for a given (x, y) position
+    Parameter:
+    - pos: tuple (x, y) position in meters
+    - measurements: dict of measured distances to landmarks, e.g. {'yellow': 1, 'red': 1.5, ...}
+    Returns: total squared error across all landmarks
+"""
 def error_function(pos, measurements):
-    """Calculates the squared error between measured and predicted distances."""
     error = 0.0
     for color, d_measured in measurements.items():
         lx, ly = LANDMARK_POSITIONS[color]
@@ -48,14 +67,23 @@ def error_function(pos, measurements):
         error += (d_predicted - d_measured)**2
     return error
 
+"""
+    Function: Performs trilateration to estimate the robot's (x, y) position based on distance measurements to landmarks
+    Parameter:
+    - measurements: dict of measured distances to landmarks, e.g. {'yellow': 1, 'red': 1.5, ...}
+    Returns: estimated (x, y) position in meters
+"""
 def perform_trilateration(measurements):
-    """Minimizes the error function to estimate (x, y) position."""
     initial_guess = [0.0, 0.0]
     result = minimize(error_function, initial_guess, args=(measurements,))
     return result.x
     
+"""
+    Function: Rotates the robot to find landmarks and records LIDAR distances to them for localization
+    Parameter:
+    - robot: HamBot instance with LIDAR and camera enabled
+"""
 def gather_measurements(robot):
-    """Rotates the robot to find landmarks and records LIDAR distances."""
     measurements = {}
     
     # Begin rotating in place

@@ -1,132 +1,195 @@
+"""
+Author: Ngoc Bao Dinh
+UID: U27463715
+
+AI usage 
+Prompt 1:
+Goal: Program a Python script to fulfill the task 2 outline for physical robots in the pdf "Lab 4 Code Submission.pdf".
+For physical robots information, refer to "RobotHardware2026.pdf".
+For the functions that can be implement in the Python script, refer to "robot.py"
+For sensor functions, refer to the other python scripts
+"""
+
 import time
-import numpy as np
-from scipy.optimize import minimize
+import random
+import sys
 from robot_systems.robot import HamBot
 
-# --- System Constants ---
-LANDMARK_POSITIONS = {
-    'yellow': (-1.2, 1.2),
-    'blue':    (1.2, 1.2),
-    'green':  (-1.2, -1.2),
-    'red':   (1.2, -1.2)
-}
+WHEEL_CIRCUMFERENCE_MM = 90 * 3.14159
+TRACK_WIDTH_MM = 184
+CELL_SIZE_MM = 600
+ROTATIONS_FORWARD = CELL_SIZE_MM / WHEEL_CIRCUMFERENCE_MM
+ROTATIONS_90DEG = ((TRACK_WIDTH_MM * 3.14159) / 4) / WHEEL_CIRCUMFERENCE_MM
+WALL_THRESHOLD_MM = 450
 
-TARGET_COLORS_RGB = {
-    'yellow': (193, 189, 29),
-    'red':    (174, 45, 68),
-    'green':  (11, 99, 80),
-    'blue':   (0, 30, 180)
-}
+"""
+    Function: Builds the 4x4 grid map for Maze 2 with outer and inner wall definitions
+    Returns: Dictionary representing the maze map
+"""
+def build_maze2_map_4x4():
+    maze = {i: {'N': 0, 'E': 0, 'S': 0, 'W': 0} for i in range(1, 17)}
+    
+    # Outer boundaries
+    for i in range(1, 17):
+        if i <= 4: maze[i]['N'] = 1
+        if i >= 13: maze[i]['S'] = 1
+        if i % 4 == 1: maze[i]['W'] = 1
+        if i % 4 == 0: maze[i]['E'] = 1
 
-LANDMARK_RADIUS_M = 0.04
-CAMERA_WIDTH = 640
-CENTER_TOLERANCE_PX = 60
-ROTATION_SPEED_RPM = 15
-
-def get_cell_index(x, y):
-    """
-    Maps continuous (x, y) coordinates in meters to grid cell index 1-16.
-    Grid is 4x4, cells are 0.6 m x 0.6 m, centered at origin (0,0).
-    """
-    # Offset by 1.2 m (half the total 2.4 m width/height) and divide by cell size
-    col = int(np.floor((x + 1.2) / 0.6))
-    row = int(np.floor((1.2 - y) / 0.6))
-    
-    # Clamp bounds to 0-3 to handle sensor noise or edge boundaries
-    col = max(0, min(3, col))
-    row = max(0, min(3, row))
-    
-    # Calculate 1D index (1 to 16)
-    return row * 4 + col + 1
-
-def error_function(pos, measurements):
-    """Calculates the squared error between measured and predicted distances."""
-    error = 0.0
-    for color, d_measured in measurements.items():
-        lx, ly = LANDMARK_POSITIONS[color]
-        d_predicted = np.sqrt((pos[0] - lx)**2 + (pos[1] - ly)**2)
-        error += (d_predicted - d_measured)**2
-    return error
-
-def perform_trilateration(measurements):
-    """Minimizes the error function to estimate (x, y) position."""
-    initial_guess = [0.0, 0.0]
-    result = minimize(error_function, initial_guess, args=(measurements,))
-    return result.x
-    
-def gather_measurements(robot):
-    """Rotates the robot to find landmarks and records LIDAR distances."""
-    measurements = {}
-    
-    # Begin rotating in place
-    robot.set_left_motor_speed(-ROTATION_SPEED_RPM)
-    robot.set_right_motor_speed(ROTATION_SPEED_RPM)
-    
-    for color_name, rgb in TARGET_COLORS_RGB.items():
-        robot.camera.set_target_colors([rgb], tolerance=0.15)
-        print(f"Scanning for {color_name} landmark...")
+    # Inner walls for Maze 2 (S-shape configuration)
+    inner_walls = [
+        # Top horizontal
+        (2, 'S', 6, 'N'), (3, 'S', 7, 'N'),
+        # Left vertical
+        (5, 'E', 6, 'W'),
+        # Middle horizontal
+        (6, 'S', 10, 'N'), (7, 'S', 11, 'N'), (8, 'S', 12, 'N'),
+        # Right vertical
+        (11, 'E', 12, 'W'),
+        # Bottom horizontal
+        (10, 'S', 14, 'N'), (11, 'S', 15, 'N')
+    ]
+    for c1, dir1, c2, dir2 in inner_walls:
+        maze[c1][dir1] = 1
+        maze[c2][dir2] = 1
         
-        found = False
-        start_time = time.time()
-        
-        while not found and (time.time() - start_time < 15):
-            landmarks = robot.camera.find_landmarks(min_area=800)
-            
-            
-            if landmarks:
-                # Get the largest contour assuming it's the target
-                target = max(landmarks, key=lambda l: l.width * l.height)
-                print(f"Color (R,G,B): ({target.r}, {target.g}, {target.b})")
-                
-                # Check if the landmark is centered in the camera frame
-                if abs(target.x - (CAMERA_WIDTH / 2)) < CENTER_TOLERANCE_PX:
-                    robot.stop_motors()
-                    time.sleep(0.5) # Stabilize before reading LIDAR
-                    
-                    scan = robot.get_range_image()
-                    front_dist = scan[180]
+    return maze
 
-                    if front_dist > 0:
-                        # Convert millimeters to meters, then add the radius
-                        true_distance = (front_dist / 1000.0) + LANDMARK_RADIUS_M
-                        measurements[color_name] = true_distance
-                        print(f"Recorded {color_name}: {true_distance:.2f} m. Color (R,G,B): ({target.r}, {target.g}, {target.b})")
-                        found = True
-                    
-                    # Resume rotation
-                    robot.set_left_motor_speed(-ROTATION_SPEED_RPM)
-                    robot.set_right_motor_speed(ROTATION_SPEED_RPM)
-                    
-            time.sleep(0.05)
-            
-        robot.camera.clear_target_colors()
-        
-        # Stop early if we have enough measurements to solve (minimum 3)
-        if len(measurements) >= 3:
-            break
 
-    robot.stop_motors()
-    return measurements
+"""
+    Function: Averages lidar readings around a target angle to reduce noise
+    Parameter:
+    - scan: list of 360 lidar distance readings
+    - target_angle: angle in degrees to center the averaging around (0-359)
+    - window: number of degrees on either side of target_angle to include in the average (default=2 for a 5-degree window) 
+    Returns: average distance in mm, or float('inf') if no valid readings are found 
+"""
+def get_average_distance(scan, target_angle, window=2):
+    """Averages lidar readings around a target angle to reduce noise."""
+    valid_readings = [
+        scan[(target_angle + i) % 360] 
+        for i in range(-window, window + 1) 
+        if scan[(target_angle + i) % 360] > 0
+    ]
+    return sum(valid_readings) / len(valid_readings) if valid_readings else float('inf')
 
 def main():
-    robot = HamBot(lidar_enabled=True, camera_enabled=True)
-    time.sleep(2) # Allow sensors to warm up
-
+    bot = HamBot(lidar_enabled=True, camera_enabled=False)
+    maze = build_maze2_map_4x4()
+    
+    # Initialize 250 particles evenly distributed across 16 cells
+    particles = [{'cell': random.randint(1, 16), 'orientation': random.choice(['N', 'E', 'S', 'W'])} for _ in range(250)]
+    
+    time.sleep(2) # Sensor warmup
+    
     try:
-        measurements = gather_measurements(robot)
-        
-        if len(measurements) >= 3:
-            estimated_pos = perform_trilateration(measurements)
-            cell_index = get_cell_index(estimated_pos[0], estimated_pos[1])
+        while True:
+            scan = bot.get_range_image()
+            heading = bot.get_heading(blocking=True)
             
-            print("\n--- Localization Results ---")
-            print(f"Estimated Position (x, y): ({estimated_pos[0]:.2f}, {estimated_pos[1]:.2f}) m")
-            print(f"Grid Cell Index: {cell_index}")
-        else:
-            print(f"\nFailed to localize. Only acquired {len(measurements)} measurements. Minimum 3 required.")
+            if scan == -1 or heading is None:
+                time.sleep(0.1)
+                continue
 
+            discrete_heading = round(heading / 90.0) * 90 % 360
+            
+            dist_F = get_average_distance(scan, 180)
+            dist_B = get_average_distance(scan, 0)
+            dist_L = get_average_distance(scan, 90)
+            dist_R = get_average_distance(scan, 270)
+            
+            # Align Lidar data to absolute compass directions
+            obs = {}
+            if discrete_heading == 90:   # Facing North
+                obs['N'] = 1 if dist_F < WALL_THRESHOLD_MM else 0
+                obs['E'] = 1 if dist_R < WALL_THRESHOLD_MM else 0
+                obs['S'] = 1 if dist_B < WALL_THRESHOLD_MM else 0
+                obs['W'] = 1 if dist_L < WALL_THRESHOLD_MM else 0
+            elif discrete_heading == 0:  # Facing East
+                obs['N'] = 1 if dist_L < WALL_THRESHOLD_MM else 0
+                obs['E'] = 1 if dist_F < WALL_THRESHOLD_MM else 0
+                obs['S'] = 1 if dist_R < WALL_THRESHOLD_MM else 0
+                obs['W'] = 1 if dist_B < WALL_THRESHOLD_MM else 0
+            elif discrete_heading == 270: # Facing South
+                obs['N'] = 1 if dist_B < WALL_THRESHOLD_MM else 0
+                obs['E'] = 1 if dist_L < WALL_THRESHOLD_MM else 0
+                obs['S'] = 1 if dist_F < WALL_THRESHOLD_MM else 0
+                obs['W'] = 1 if dist_R < WALL_THRESHOLD_MM else 0
+            elif discrete_heading == 180: # Facing West
+                obs['N'] = 1 if dist_R < WALL_THRESHOLD_MM else 0
+                obs['E'] = 1 if dist_B < WALL_THRESHOLD_MM else 0
+                obs['S'] = 1 if dist_L < WALL_THRESHOLD_MM else 0
+                obs['W'] = 1 if dist_F < WALL_THRESHOLD_MM else 0
+
+            # 1. Correction 
+            weights = []
+            for p in particles:
+                w = 1.0
+                cell = p['cell']
+                for d in ['N', 'E', 'S', 'W']:
+                    z = obs[d]
+                    s = maze[cell][d]
+                    if z == 0 and s == 0: w *= 0.6
+                    elif z == 1 and s == 0: w *= 0.4
+                    elif z == 1 and s == 1: w *= 0.8
+                    elif z == 0 and s == 1: w *= 0.2
+                weights.append(w)
+
+            # Normalize weights
+            total_w = sum(weights)
+            if total_w == 0:
+                weights = [1.0 / 250] * 250
+            else:
+                weights = [w / total_w for w in weights]
+
+            # 2. Resampling
+            indices = random.choices(range(250), weights=weights, k=250)
+            particles = [
+                {
+                    'cell': particles[i]['cell'], 
+                    'orientation': random.choice(['N', 'E', 'S', 'W'])
+                } 
+                for i in indices
+            ]
+
+            # Output Generation
+            counts = {i: 0 for i in range(1, 17)}
+            for p in particles:
+                counts[p['cell']] += 1
+
+            mode_cell = max(counts, key=counts.get)
+            max_count = counts[mode_cell]
+            percent = max_count / 250.0
+
+            print("\nParticle Distribution:")
+            for row in range(4):
+                print(" ".join([f"{counts[row * 4 + col + 1]:4d}" for col in range(4)]))
+            print(f"Mode Cell: {mode_cell} ({percent * 100:.1f}%)")
+
+            if percent >= 0.8:
+                print("Localization successful (>= 80% particles in one cell).")
+                break
+
+            # 3. Prediction 
+            if dist_F > WALL_THRESHOLD_MM:
+                bot.run_motors_for_rotations(ROTATIONS_FORWARD, left_speed=50, right_speed=50)
+                for p in particles:
+                    c = p['cell']
+                    d = p['orientation']
+                    if maze[c][d] == 0:
+                        if d == 'N': p['cell'] -= 4
+                        elif d == 'S': p['cell'] += 4
+                        elif d == 'E': p['cell'] += 1
+                        elif d == 'W': p['cell'] -= 1
+            else:
+                bot.run_motors_for_rotations(ROTATIONS_90DEG, left_speed=50, right_speed=-50)
+            
+            time.sleep(1) 
+
+    except KeyboardInterrupt:
+        pass
     finally:
-        robot.disconnect_robot()
+        bot.disconnect_robot()
 
 if __name__ == "__main__":
     main()
