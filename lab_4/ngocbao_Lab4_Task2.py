@@ -1,20 +1,9 @@
-"""
-Author: Ngoc Bao Dinh
-UID: U27463715
-
-AI usage 
-Prompt 1:
-Goal: Program a Python script to fulfill the task 2 outline for physical robots in the pdf "Lab 4 Code Submission.pdf".
-For physical robots information, refer to "RobotHardware2026.pdf".
-For the functions that can be implement in the Python script, refer to "robot.py"
-For sensor functions, refer to the other python scripts
-"""
-
 import time
 import random
 import sys
 from robot_systems.robot import HamBot
 
+# Constants derived from hardware specifications
 WHEEL_CIRCUMFERENCE_MM = 90 * 3.14159
 TRACK_WIDTH_MM = 184
 CELL_SIZE_MM = 600
@@ -22,11 +11,8 @@ ROTATIONS_FORWARD = CELL_SIZE_MM / WHEEL_CIRCUMFERENCE_MM
 ROTATIONS_90DEG = ((TRACK_WIDTH_MM * 3.14159) / 4) / WHEEL_CIRCUMFERENCE_MM
 WALL_THRESHOLD_MM = 450
 
-"""
-    Function: Builds the 4x4 grid map for Maze 2 with outer and inner wall definitions
-    Returns: Dictionary representing the maze map
-"""
 def build_maze2_map_4x4():
+    """Generates the 4x4 grid map with outer and inner wall definitions."""
     maze = {i: {'N': 0, 'E': 0, 'S': 0, 'W': 0} for i in range(1, 17)}
     
     # Outer boundaries
@@ -55,15 +41,6 @@ def build_maze2_map_4x4():
         
     return maze
 
-
-"""
-    Function: Averages lidar readings around a target angle to reduce noise
-    Parameter:
-    - scan: list of 360 lidar distance readings
-    - target_angle: angle in degrees to center the averaging around (0-359)
-    - window: number of degrees on either side of target_angle to include in the average (default=2 for a 5-degree window) 
-    Returns: average distance in mm, or float('inf') if no valid readings are found 
-"""
 def get_average_distance(scan, target_angle, window=2):
     """Averages lidar readings around a target angle to reduce noise."""
     valid_readings = [
@@ -77,8 +54,8 @@ def main():
     bot = HamBot(lidar_enabled=True, camera_enabled=False)
     maze = build_maze2_map_4x4()
     
-    # Initialize 250 particles evenly distributed across 16 cells
-    particles = [{'cell': random.randint(1, 16), 'orientation': random.choice(['N', 'E', 'S', 'W'])} for _ in range(250)]
+    # Initialize 250 particles. Orientation is removed; the IMU provides absolute heading.
+    particles = [{'cell': random.randint(1, 16)} for _ in range(250)]
     
     time.sleep(2) # Sensor warmup
     
@@ -91,6 +68,7 @@ def main():
                 time.sleep(0.1)
                 continue
 
+            # Snap heading to nearest cardinal direction
             discrete_heading = round(heading / 90.0) * 90 % 360
             
             dist_F = get_average_distance(scan, 180)
@@ -98,7 +76,7 @@ def main():
             dist_L = get_average_distance(scan, 90)
             dist_R = get_average_distance(scan, 270)
             
-            # Align Lidar data to absolute compass directions
+            # 1. Align Lidar data to absolute compass directions
             obs = {}
             if discrete_heading == 90:   # Facing North
                 obs['N'] = 1 if dist_F < WALL_THRESHOLD_MM else 0
@@ -121,7 +99,7 @@ def main():
                 obs['S'] = 1 if dist_L < WALL_THRESHOLD_MM else 0
                 obs['W'] = 1 if dist_F < WALL_THRESHOLD_MM else 0
 
-            # 1. Correction 
+            # 2. Correction (Sensor Update)
             weights = []
             for p in particles:
                 w = 1.0
@@ -142,17 +120,11 @@ def main():
             else:
                 weights = [w / total_w for w in weights]
 
-            # 2. Resampling
+            # 3. Resampling
             indices = random.choices(range(250), weights=weights, k=250)
-            particles = [
-                {
-                    'cell': particles[i]['cell'], 
-                    'orientation': random.choice(['N', 'E', 'S', 'W'])
-                } 
-                for i in indices
-            ]
-
-            # Output Generation
+            particles = [{'cell': particles[i]['cell']} for i in indices]
+            
+            # 4. Output Generation
             counts = {i: 0 for i in range(1, 17)}
             for p in particles:
                 counts[p['cell']] += 1
@@ -170,17 +142,25 @@ def main():
                 print("Localization successful (>= 80% particles in one cell).")
                 break
 
-            # 3. Prediction 
+            # 5. Prediction (Motion Update)
             if dist_F > WALL_THRESHOLD_MM:
                 bot.run_motors_for_rotations(ROTATIONS_FORWARD, left_speed=50, right_speed=50)
+                
+                # Determine absolute direction of movement
+                move_dir = None
+                if discrete_heading == 90: move_dir = 'N'
+                elif discrete_heading == 0: move_dir = 'E'
+                elif discrete_heading == 270: move_dir = 'S'
+                elif discrete_heading == 180: move_dir = 'W'
+
+                # Apply absolute movement to all particles
                 for p in particles:
                     c = p['cell']
-                    d = p['orientation']
-                    if maze[c][d] == 0:
-                        if d == 'N': p['cell'] -= 4
-                        elif d == 'S': p['cell'] += 4
-                        elif d == 'E': p['cell'] += 1
-                        elif d == 'W': p['cell'] -= 1
+                    if maze[c][move_dir] == 0:
+                        if move_dir == 'N': p['cell'] -= 4
+                        elif move_dir == 'S': p['cell'] += 4
+                        elif move_dir == 'E': p['cell'] += 1
+                        elif move_dir == 'W': p['cell'] -= 1
             else:
                 bot.run_motors_for_rotations(ROTATIONS_90DEG, left_speed=50, right_speed=-50)
             
