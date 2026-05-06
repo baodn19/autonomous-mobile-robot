@@ -22,8 +22,13 @@
 - Battery: 5V-12V 10,000 mAh
 - Motor: LEGO Technic Large Angular Motors
 
+# Software:
+The Python scripts is built on <a href="https://github.com/biorobaw/HamBot">HamBot</a>, a Python library for controlling the lab's robot.
+
 
 # Lab Assignments:
+Below are the lab assignments comprehensively covering the basics of robot navigation and SLAM. Click the links for assignment's details and python scripts to run on the robot.
+
 1. <a href="https://github.com/baodn19/autonomous-mobile-robot/tree/main/lab_1">Kinematics</a>
 2. <a href="https://github.com/baodn19/autonomous-mobile-robot/tree/main/lab_2">PID Navigation Control</a>
 3. <a href="https://github.com/baodn19/autonomous-mobile-robot/tree/main/lab_3">Motion Planning</a>
