@@ -3,7 +3,7 @@
 <h1>Autonomous Mobile Robot</h1>
 
 <p>
-  <b>A differential drive robot capable of path planning and localizing through landmarks. This project is built for the class "CDA 4621: Control of Mobile Robots". Syllabus: <a href="https://www.youtube.com/playlist?list=PLeuMA6tJBPKsAfRfFuGrEljpBow5hPVD4">Carbon Aeronautics</a></b>
+  <b>A differential drive robot capable of path planning and localizing through landmarks. This project is built for the class "CDA 4621: Control of Mobile Robots". Syllabus: <a href="https://github.com/baodn19/autonomous-mobile-robot/blob/f481a7ef06eda892b2ddac3e141edd688bb8abd6/assets/Syllabus%20Spring2026.pdf">CDA 4621 - Spring 2026</a></b>
 </p>
 
 </div>
