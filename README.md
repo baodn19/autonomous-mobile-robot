@@ -33,4 +33,4 @@ Below are the lab assignments comprehensively covering the basics of robot navig
 2. <a href="https://github.com/baodn19/autonomous-mobile-robot/tree/main/lab_2">PID Navigation Control</a>
 3. <a href="https://github.com/baodn19/autonomous-mobile-robot/tree/main/lab_3">Motion Planning</a>
 4. <a href="https://github.com/baodn19/autonomous-mobile-robot/tree/main/lab_4">Localization & Filters</a>
-5. Mapping & Path Planning
+5. <a href="https://github.com/baodn19/autonomous-mobile-robot/tree/main/lab_5">Mapping & Path Planning</a>
