@@ -10,18 +10,22 @@
 
 <table>
   <tr>
-    <td><a href="https://youtu.be/zT4afo5xaLo" title="Quadcopter Flight Test"><img src="https://github.com/baodn19/quadcopter/blob/main/Asset/Quadcopter.jpg"></a></td>
+    <td><img src="https://github.com/baodn19/autonomous-mobile-robot/blob/main/assets/Robot%20-%20README.JPG"></td>
   </tr>
 </table>
 
 # Hardware:
-- MCU: Teensy 4.0
-- Sensor: GY-521 MPU-6050 (Orientation sensor) & GY-BMP280 (Barometer)
-- Battery: 2S 1100mAh
-- ESC: Skywalker 15A V2 ESC
-- Motor: LANNRC 1404 4600kV Plus
-- Propeller: GEMFAN Hurricane 4024
+- SBC: Raspberry Pi 4 (4GB RAM)
+- Camera: Raspberry Pi Camera v2
+- Lidar: Slamtec RPLIDAR A1
+- Sensors: IMU (BNOO0055), GPS (PA1010D)
+- Battery: 5V-12V 10,000 mAh
+- Motor: LEGO Technic Large Angular Motors
 
-# Project Roadmap:
-- [ ] Integrate a camera for taking video
-- [ ] Autonomous motion planning
+
+# Lab Assignments:
+1. <a href="https://github.com/baodn19/autonomous-mobile-robot/tree/main/lab_1">Kinematics</a>
+2. <a href="https://github.com/baodn19/autonomous-mobile-robot/tree/main/lab_2">PID Navigation Control</a>
+3. <a href="https://github.com/baodn19/autonomous-mobile-robot/tree/main/lab_3">Motion Planning</a>
+4. <a href="https://github.com/baodn19/autonomous-mobile-robot/tree/main/lab_4">Localization & Filters</a>
+5. Mapping & Path Planning
