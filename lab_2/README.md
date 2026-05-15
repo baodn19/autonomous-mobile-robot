@@ -1,7 +1,7 @@
 # Requirements
 - Core Objective: Control motion using LIDAR for wall distance, wheel encoders for linear distance traveled, and an IMU/compass for rotation.
 - Environment Setup:
-<img src="https://github.com/baodn19/autonomous-mobile-robot/blob/main/assets/lab2-physical%20map.png">
+<img src="https://github.com/baodn19/autonomous-mobile-robot/blob/main/assets/lab2_physical_map.png">
 
 - Desired Path:
 <img src="https://github.com/baodn19/autonomous-mobile-robot/blob/main/assets/lab2_desired_paths.png">
