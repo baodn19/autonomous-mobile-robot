@@ -1,7 +1,7 @@
 # Requirements
 ## Task 1: Trilateration
 - Core Objective: Localize the robot by calculating continuous $(x,y)$ coordinates and mapping them to a grid cell index (1-25) using trilateration.  
-- Environment Setup: Construct Physical Maze 1, consisting of a $5\times5$ grid where each cell is $1\text{ m} \times 1\text{ m}$, and four colored landmarks (Yellow, Red, Green, Blue) are placed at the grid corners.
+- Environment Setup: Construct Physical Maze 1 with four colored landmarks (Yellow, Red, Green, Blue) placed at the grid corners.
 <img src="https://github.com/baodn19/autonomous-mobile-robot/blob/main/assets/lab4_task1_physical_map.png">
 
 - Sensor Utilization: Use the onboard camera to detect colored landmarks and the LIDAR to measure distances to at least three of these landmarks.
