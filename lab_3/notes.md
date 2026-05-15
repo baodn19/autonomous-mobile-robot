@@ -1,3 +1,0 @@
-- Camera: use tolerance for RGB values, click on item with GUI to get set of RGB data
-- PID: P is sufficient, and I and D can be left out
-- Start: spin in place to find the goal and start after seeing the goal
