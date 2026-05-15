@@ -1,7 +1,10 @@
 # Requirements
 - Core Objective: Control motion using LIDAR for wall distance, wheel encoders for linear distance traveled, and an IMU/compass for rotation.
 - Environment Setup:
-<img src="https://github.com/baodn19/autonomous-mobile-robot/blob/main/assets/Robot%20-%20README.JPG">
+<img src="https://github.com/baodn19/autonomous-mobile-robot/blob/main/assets/lab2-physical%20map.png">
+
+- Desired Path:
+<img src="https://github.com/baodn19/autonomous-mobile-robot/blob/main/assets/lab2_desired_paths.png">
 
 - Sensor Utilization: Execute the following nine-step sequence in exact order:
 1. Use LIDAR PID to drive forward and stop 1 m from the wall.
