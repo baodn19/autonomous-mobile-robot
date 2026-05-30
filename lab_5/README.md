@@ -13,4 +13,4 @@
 
 # Demonstration
 
-# Take-away
+<img src="https://github.com/baodn19/autonomous-mobile-robot/blob/main/assets/lab5_demo.gif">
