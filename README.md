@@ -14,6 +14,12 @@
   </tr>
 </table>
 
+<img src="https://github.com/baodn19/autonomous-mobile-robot/blob/main/assets/lab4_task2_demo.gif">
+
+<img src="https://github.com/baodn19/autonomous-mobile-robot/blob/main/assets/lab5_demo.gif">
+
+<img src="https://github.com/baodn19/autonomous-mobile-robot/blob/main/assets/lab4_task1_demo.gif">
+
 # Hardware
 - SBC: Raspberry Pi 4 (4GB RAM)
 - Camera: Raspberry Pi Camera v2
