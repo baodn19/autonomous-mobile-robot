@@ -21,6 +21,8 @@
 
 # Demonstration
 
+<img src="https://github.com/baodn19/autonomous-mobile-robot/blob/main/assets/lab2_demo.gif">
+
 # Take-away
 - Finding the right combination of PID is a long process of trials and errors
 - LIDAR PID is the most accurate among the LIDAR, IMU, and PID

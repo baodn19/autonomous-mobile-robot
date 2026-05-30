@@ -11,5 +11,7 @@
 
 # Demonstration
 
+<img src="https://github.com/baodn19/autonomous-mobile-robot/blob/main/assets/lab3_demo.gif">
+
 # Take-away
 - It's important to print out the values the robot is processing to debug. For instance, my robot constantly misses the red cylinder goal marker because the RGB values from the camera are different than the RGB values I provided.
